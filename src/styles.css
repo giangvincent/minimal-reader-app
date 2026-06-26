@@ -26,6 +26,11 @@ select {
   grid-template-columns: 292px minmax(0, 1fr);
   height: 100vh;
   background: #f5f1e8;
+  transition: grid-template-columns 180ms ease;
+}
+
+.app-shell.sidebar-collapsed {
+  grid-template-columns: 64px minmax(0, 1fr);
 }
 
 .sidebar {
@@ -36,6 +41,8 @@ select {
   padding: 22px 18px;
   border-right: 1px solid #ddd4c5;
   background: #ebe4d8;
+  overflow: hidden;
+  transition: padding 180ms ease;
 }
 
 .brand {
@@ -43,6 +50,10 @@ select {
   align-items: start;
   justify-content: space-between;
   gap: 12px;
+}
+
+.brand-copy {
+  min-width: 0;
 }
 
 .brand h1,
@@ -84,6 +95,11 @@ select {
   line-height: 1;
 }
 
+.sidebar-toggle {
+  flex-shrink: 0;
+  font-size: 16px;
+}
+
 .import-button {
   display: grid;
   place-items: center;
@@ -97,6 +113,41 @@ select {
 
 .import-button input {
   display: none;
+}
+
+.sidebar-collapsed .sidebar {
+  align-items: center;
+  gap: 14px;
+  padding: 18px 10px;
+}
+
+.sidebar-collapsed .brand {
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.sidebar-collapsed .brand-copy,
+.sidebar-collapsed .create-folder-button,
+.sidebar-collapsed .import-button,
+.sidebar-collapsed .folders,
+.sidebar-collapsed .document-list {
+  display: none;
+}
+
+.sidebar-collapsed .sidebar::after {
+  content: "MR";
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid #d8cdbd;
+  border-radius: 7px;
+  background: #fffaf1;
+  color: #70685c;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
 }
 
 .folders {
@@ -334,7 +385,7 @@ select {
 }
 
 .side-page-button {
-  position: sticky;
+  position: absolute;
   top: 28px;
   z-index: 2;
   display: grid;
@@ -357,15 +408,11 @@ select {
 }
 
 .side-page-button-left {
-  justify-self: start;
-  margin-left: -62px;
-  grid-area: 1 / 1;
+  left: 26px;
 }
 
 .side-page-button-right {
-  justify-self: end;
-  margin-right: -62px;
-  grid-area: 1 / 1;
+  right: 26px;
 }
 
 .toast {
@@ -448,6 +495,11 @@ select {
     grid-template-rows: 230px minmax(0, 1fr);
   }
 
+  .app-shell.sidebar-collapsed {
+    grid-template-columns: 1fr;
+    grid-template-rows: 58px minmax(0, 1fr);
+  }
+
   .sidebar {
     border-right: 0;
     border-bottom: 1px solid #ddd4c5;
@@ -497,11 +549,11 @@ select {
   }
 
   .side-page-button-left {
-    margin-left: 0;
+    left: 24px;
   }
 
   .side-page-button-right {
-    margin-right: 0;
+    right: 24px;
   }
 
   .page-float {

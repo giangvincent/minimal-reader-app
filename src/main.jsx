@@ -120,6 +120,13 @@ function App() {
       return [];
     }
   });
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem("minimal-reader-sidebar") === "collapsed";
+    } catch {
+      return false;
+    }
+  });
   const [activeId, setActiveId] = useState(null);
   const [folder, setFolder] = useState("Library");
   const [pageInput, setPageInput] = useState("1");
@@ -169,6 +176,10 @@ function App() {
   useEffect(() => {
     localStorage.setItem("minimal-reader-folders", JSON.stringify(customFolders));
   }, [customFolders]);
+
+  useEffect(() => {
+    localStorage.setItem("minimal-reader-sidebar", isSidebarCollapsed ? "collapsed" : "expanded");
+  }, [isSidebarCollapsed]);
 
   useEffect(() => {
     if (activeDoc && activeDoc.id !== activeId) setActiveId(activeDoc.id);
@@ -382,14 +393,21 @@ function App() {
   }
 
   return (
-    <main className="app-shell">
+    <main className={isSidebarCollapsed ? "app-shell sidebar-collapsed" : "app-shell"}>
       <aside className="sidebar">
         <div className="brand">
-          <div>
+          <div className="brand-copy">
             <h1>Minimal Reader</h1>
             <p>{docs.length} document{docs.length === 1 ? "" : "s"}</p>
           </div>
-          <button className="icon-button" onClick={createFolder} title="Create folder">+</button>
+          <button
+            className="icon-button sidebar-toggle"
+            onClick={() => setIsSidebarCollapsed((value) => !value)}
+            title={isSidebarCollapsed ? "Show sidebar" : "Hide sidebar"}
+          >
+            {isSidebarCollapsed ? ">" : "<"}
+          </button>
+          <button className="icon-button create-folder-button" onClick={createFolder} title="Create folder">+</button>
         </div>
 
         <label className="import-button">
