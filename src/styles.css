@@ -1,0 +1,511 @@
+:root {
+  color-scheme: light;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #f5f1e8;
+  color: #24231f;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+.app-shell {
+  display: grid;
+  grid-template-columns: 292px minmax(0, 1fr);
+  height: 100vh;
+  background: #f5f1e8;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+  padding: 22px 18px;
+  border-right: 1px solid #ddd4c5;
+  background: #ebe4d8;
+}
+
+.brand {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.brand h1,
+.brand p,
+.title-block h2,
+.title-block span {
+  margin: 0;
+}
+
+.brand h1 {
+  font-size: 19px;
+  line-height: 1.2;
+}
+
+.brand p,
+.title-block span,
+.doc span,
+.empty {
+  color: #70685c;
+  font-size: 13px;
+}
+
+.icon-button,
+.toolbar-actions button,
+.page-float button,
+.side-page-button,
+.dialog-actions button {
+  border: 1px solid #cfc4b3;
+  border-radius: 7px;
+  background: #faf7f0;
+  color: #24231f;
+  cursor: pointer;
+}
+
+.icon-button {
+  width: 34px;
+  height: 34px;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.import-button {
+  display: grid;
+  place-items: center;
+  height: 40px;
+  border: 1px solid #24231f;
+  border-radius: 7px;
+  background: #24231f;
+  color: #fffaf1;
+  cursor: pointer;
+}
+
+.import-button input {
+  display: none;
+}
+
+.folders {
+  display: grid;
+  gap: 6px;
+}
+
+.folders button,
+.doc {
+  display: flex;
+  width: 100%;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.folders button {
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+}
+
+.folders button.active,
+.doc.active {
+  background: #fffaf1;
+  box-shadow: inset 0 0 0 1px #d8cdbd;
+}
+
+.folders small {
+  color: #7b7265;
+}
+
+.document-list {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-height: 0;
+  overflow: auto;
+}
+
+.doc {
+  flex-direction: column;
+  gap: 5px;
+  padding: 11px 10px;
+}
+
+.doc strong {
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.empty {
+  margin: 8px 4px;
+  line-height: 1.45;
+}
+
+.reader {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100vh;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.toolbar {
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-height: 76px;
+  padding: 14px 24px;
+  border-bottom: 1px solid rgba(221, 212, 197, 0.75);
+  background: rgba(245, 241, 232, 0.88);
+  backdrop-filter: blur(14px);
+}
+
+.title-block {
+  min-width: 0;
+}
+
+.title-block h2 {
+  overflow: hidden;
+  font-size: 18px;
+  font-weight: 680;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.toolbar-actions button,
+.toolbar-actions select {
+  height: 34px;
+  padding: 0 11px;
+}
+
+.toolbar-actions select {
+  max-width: 150px;
+  border: 1px solid #cfc4b3;
+  border-radius: 7px;
+  background: #faf7f0;
+}
+
+.toolbar-actions .selected {
+  background: #24231f;
+  color: #fffaf1;
+}
+
+.toolbar-actions button:disabled,
+.page-float button:disabled,
+.side-page-button:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.stage {
+  position: relative;
+  display: grid;
+  place-items: start center;
+  min-height: 0;
+  overflow: auto;
+  padding: 28px 88px 86px;
+}
+
+.welcome {
+  width: min(520px, 100%);
+  margin-top: 12vh;
+  text-align: center;
+}
+
+.welcome h3 {
+  margin: 0 0 8px;
+  font-size: 24px;
+}
+
+.welcome p {
+  margin: 0;
+  color: #70685c;
+  line-height: 1.6;
+}
+
+.pdf-page {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  min-width: 0;
+}
+
+.pdf-page canvas,
+.text-page {
+  border-radius: 4px;
+  background: #fffdf8;
+  box-shadow: 0 18px 50px rgba(78, 65, 45, 0.15), 0 0 0 1px rgba(91, 75, 52, 0.08);
+}
+
+.loading {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: rgba(36, 35, 31, 0.85);
+  color: #fffaf1;
+  padding: 7px 12px;
+  font-size: 13px;
+}
+
+.text-page {
+  width: 780px;
+  max-width: calc(100vw - 420px);
+  min-height: min(920px, calc(100vh - 190px));
+  transform-origin: top center;
+  padding: clamp(32px, 5vw, 58px);
+}
+
+.text-page pre {
+  margin: 0;
+  white-space: pre-wrap;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 20px;
+  line-height: 1.72;
+  color: #28231c;
+}
+
+.page-float {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transform: translateX(-50%);
+  border: 1px solid rgba(207, 196, 179, 0.86);
+  border-radius: 999px;
+  background: rgba(255, 250, 241, 0.92);
+  box-shadow: 0 12px 32px rgba(78, 65, 45, 0.16);
+  padding: 8px;
+  backdrop-filter: blur(16px);
+}
+
+.page-float button {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+}
+
+.page-float form {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #70685c;
+}
+
+.page-float input {
+  width: 48px;
+  height: 32px;
+  border: 1px solid #d4c9b9;
+  border-radius: 999px;
+  background: #fffdf8;
+  text-align: center;
+}
+
+.side-page-button {
+  position: sticky;
+  top: 28px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: var(--page-rail-height, 420px);
+  border-color: transparent;
+  border-radius: 8px;
+  background: transparent;
+  box-shadow: none;
+  color: rgba(36, 35, 31, 0.42);
+  font-size: 28px;
+  transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
+}
+
+.side-page-button:hover:not(:disabled) {
+  border-color: rgba(207, 196, 179, 0.72);
+  background: rgba(255, 250, 241, 0.72);
+  color: #24231f;
+}
+
+.side-page-button-left {
+  justify-self: start;
+  margin-left: -62px;
+  grid-area: 1 / 1;
+}
+
+.side-page-button-right {
+  justify-self: end;
+  margin-right: -62px;
+  grid-area: 1 / 1;
+}
+
+.toast {
+  position: absolute;
+  right: 18px;
+  bottom: 20px;
+  max-width: 300px;
+  animation: fade-away 3s ease forwards;
+  border-radius: 7px;
+  background: #24231f;
+  color: #fffaf1;
+  padding: 10px 12px;
+  font-size: 13px;
+}
+
+.dialog-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  background: rgba(36, 35, 31, 0.22);
+  backdrop-filter: blur(4px);
+}
+
+.folder-dialog {
+  display: grid;
+  gap: 14px;
+  width: min(360px, calc(100vw - 36px));
+  border: 1px solid #d4c9b9;
+  border-radius: 8px;
+  background: #fffaf1;
+  box-shadow: 0 22px 70px rgba(78, 65, 45, 0.24);
+  padding: 18px;
+}
+
+.folder-dialog h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.folder-dialog input {
+  width: 100%;
+  height: 40px;
+  border: 1px solid #cfc4b3;
+  border-radius: 7px;
+  background: #fffdf8;
+  padding: 0 11px;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: end;
+  gap: 8px;
+}
+
+.dialog-actions button {
+  height: 36px;
+  padding: 0 12px;
+}
+
+.dialog-actions button[type="submit"] {
+  background: #24231f;
+  color: #fffaf1;
+}
+
+@keyframes fade-away {
+  0%,
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (max-width: 820px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+    grid-template-rows: 230px minmax(0, 1fr);
+  }
+
+  .sidebar {
+    border-right: 0;
+    border-bottom: 1px solid #ddd4c5;
+    overflow: hidden;
+  }
+
+  .folders {
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    overflow: auto;
+  }
+
+  .document-list {
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(210px, 1fr);
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .toolbar {
+    align-items: stretch;
+    flex-direction: column;
+    min-height: 116px;
+  }
+
+  .toolbar-actions {
+    overflow: auto;
+  }
+
+  .text-page {
+    width: calc(100vw - 42px);
+    max-width: calc(100vw - 42px);
+  }
+
+  .stage {
+    padding-inline: 24px;
+  }
+
+  .side-page-button {
+    top: auto;
+    bottom: 92px;
+    width: 40px;
+    height: 40px;
+    border-color: #cfc4b3;
+    border-radius: 999px;
+    background: rgba(255, 250, 241, 0.92);
+  }
+
+  .side-page-button-left {
+    margin-left: 0;
+  }
+
+  .side-page-button-right {
+    margin-right: 0;
+  }
+
+  .page-float {
+    width: calc(100vw - 34px);
+    justify-content: center;
+  }
+}
