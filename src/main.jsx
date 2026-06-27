@@ -113,6 +113,13 @@ function formatDate(value) {
 
 function App() {
   const [docs, setDocs] = useState([]);
+  const [theme, setTheme] = useState(() => {
+    try {
+      return localStorage.getItem("minimal-reader-theme") || "light";
+    } catch {
+      return "light";
+    }
+  });
   const [customFolders, setCustomFolders] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem("minimal-reader-folders") || "[]");
@@ -180,6 +187,11 @@ function App() {
   useEffect(() => {
     localStorage.setItem("minimal-reader-sidebar", isSidebarCollapsed ? "collapsed" : "expanded");
   }, [isSidebarCollapsed]);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem("minimal-reader-theme", theme);
+  }, [theme]);
 
   useEffect(() => {
     if (activeDoc && activeDoc.id !== activeId) setActiveId(activeDoc.id);
@@ -513,6 +525,15 @@ function App() {
             <button onClick={() => goToPage(currentPage + 1)} disabled={currentPage >= totalPages}>Next</button>
           </footer>
         )}
+
+        <button
+          className="theme-toggle"
+          onClick={() => setTheme((value) => (value === "dark" ? "light" : "dark"))}
+          title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+        >
+          <span aria-hidden="true">{theme === "dark" ? "☀" : "☾"}</span>
+        </button>
 
         {message && <div className="toast" onAnimationEnd={() => setMessage("")}>{message}</div>}
 
