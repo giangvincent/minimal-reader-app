@@ -54,6 +54,10 @@ function removeDoc(id) {
   return dbAction("readwrite", (store) => store.delete(id));
 }
 
+function clearDocs() {
+  return dbAction("readwrite", (store) => store.clear());
+}
+
 function uid() {
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
@@ -145,6 +149,8 @@ function App() {
   const [message, setMessage] = useState("");
   const [isFolderDialogOpen, setIsFolderDialogOpen] = useState(false);
   const [folderName, setFolderName] = useState("");
+  const [extractedPage, setExtractedPage] = useState(null);
+  const [isExtractingPage, setIsExtractingPage] = useState(false);
   const canvasRef = useRef(null);
   const stageRef = useRef(null);
   const textPageRef = useRef(null);
@@ -240,7 +246,7 @@ function App() {
 
   useEffect(() => {
     function handleKeyboardNavigation(event) {
-      if (!activeDoc || isFolderDialogOpen) return;
+      if (!activeDoc || isFolderDialogOpen || extractedPage) return;
 
       const target = event.target;
       const isTyping =
@@ -267,7 +273,7 @@ function App() {
 
     window.addEventListener("keydown", handleKeyboardNavigation);
     return () => window.removeEventListener("keydown", handleKeyboardNavigation);
-  }, [activeDoc, currentPage, goToPage, isFolderDialogOpen]);
+  }, [activeDoc, currentPage, extractedPage, goToPage, isFolderDialogOpen]);
 
   useEffect(() => {
     setPageInput(String(currentPage));
@@ -404,6 +410,50 @@ function App() {
     setActiveId(remaining[0]?.id || null);
   }
 
+  async function deleteLibrary() {
+    if (!docs.length) return;
+    const confirmed = window.confirm("Delete every document in your library? This cannot be undone.");
+    if (!confirmed) return;
+    await clearDocs();
+    setDocs([]);
+    setActiveId(null);
+    setMessage("Library deleted.");
+  }
+
+  async function extractCurrentPageText() {
+    if (!activeDoc || isExtractingPage) return;
+    setIsExtractingPage(true);
+    try {
+      let text = "";
+      if (activeDoc.kind === "pdf") {
+        const loadingTask = pdfjsLib.getDocument({ data: activeDoc.buffer.slice(0) });
+        try {
+          const pdf = await loadingTask.promise;
+          const page = await pdf.getPage(currentPage);
+          const content = await page.getTextContent();
+          text = content.items
+            .map((item) => item.str)
+            .join(" ")
+            .replace(/\s+/g, " ")
+            .trim();
+        } finally {
+          loadingTask.destroy?.();
+        }
+      } else {
+        text = textPages[currentPage - 1] || "";
+      }
+
+      setExtractedPage({
+        page: currentPage,
+        text: text || "No readable text was found on this page."
+      });
+    } catch {
+      setMessage("Unable to extract text from this page.");
+    } finally {
+      setIsExtractingPage(false);
+    }
+  }
+
   return (
     <main className={isSidebarCollapsed ? "app-shell sidebar-collapsed" : "app-shell"}>
       <aside className="sidebar">
@@ -426,6 +476,10 @@ function App() {
           <input accept=".pdf,.txt,.doc,.docx,application/pdf,text/plain" multiple onChange={handleImport} type="file" />
           Import
         </label>
+
+        <button className="delete-library-button" onClick={deleteLibrary} disabled={!docs.length}>
+          Delete library
+        </button>
 
         <nav className="folders" aria-label="Folders">
           {folders.map((item) => (
@@ -513,6 +567,9 @@ function App() {
         {activeDoc && (
           <footer className="page-float">
             <button onClick={() => goToPage(currentPage - 1)} disabled={currentPage <= 1}>Prev</button>
+            <button onClick={extractCurrentPageText} disabled={isExtractingPage}>
+              {isExtractingPage ? "Extracting..." : "Extract text"}
+            </button>
             <form
               onSubmit={(event) => {
                 event.preventDefault();
@@ -536,6 +593,24 @@ function App() {
         </button>
 
         {message && <div className="toast" onAnimationEnd={() => setMessage("")}>{message}</div>}
+
+        {extractedPage && (
+          <div className="dialog-backdrop" role="presentation" onMouseDown={() => setExtractedPage(null)}>
+            <section
+              className="text-extract-dialog"
+              aria-labelledby="text-extract-title"
+              role="dialog"
+              aria-modal="true"
+              onMouseDown={(event) => event.stopPropagation()}
+            >
+              <div className="text-extract-header">
+                <h3 id="text-extract-title">Page {extractedPage.page} text</h3>
+                <button className="icon-button" onClick={() => setExtractedPage(null)} title="Close">×</button>
+              </div>
+              <pre>{extractedPage.text}</pre>
+            </section>
+          </div>
+        )}
 
         {isFolderDialogOpen && (
           <div className="dialog-backdrop" role="presentation" onMouseDown={() => setIsFolderDialogOpen(false)}>
