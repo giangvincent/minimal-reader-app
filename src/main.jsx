@@ -4,6 +4,7 @@ import * as pdfjsLib from "pdfjs-dist";
 import pdfWorker from "pdfjs-dist/build/pdf.worker.mjs?url";
 import mammoth from "mammoth/mammoth.browser";
 import "./styles.css";
+import * as svgIcons from "./svg-icons.jsx";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
@@ -467,9 +468,11 @@ function App() {
             onClick={() => setIsSidebarCollapsed((value) => !value)}
             title={isSidebarCollapsed ? "Show sidebar" : "Hide sidebar"}
           >
-            {isSidebarCollapsed ? ">" : "<"}
+            <svgIcons.ChevronLeftIcon />
           </button>
-          <button className="icon-button create-folder-button" onClick={createFolder} title="Create folder">+</button>
+          <button className="icon-button create-folder-button" onClick={createFolder} title="Create folder">
+            <svgIcons.PlusIcon />
+          </button>
         </div>
 
         <label className="import-button">
@@ -529,7 +532,7 @@ function App() {
                 disabled={currentPage <= 1}
                 title="Previous page (ArrowLeft or PageUp)"
               >
-                &lt;
+                <svgIcons.ChevronLeftIcon />
               </button>
               <button
                 className="side-page-button side-page-button-right"
@@ -537,7 +540,7 @@ function App() {
                 disabled={currentPage >= totalPages}
                 title="Next page (ArrowRight, Space, or PageDown)"
               >
-                &gt;
+                <svgIcons.ChevronRightIcon />
               </button>
             </>
           )}
@@ -589,7 +592,7 @@ function App() {
           title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
           aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
         >
-          <span aria-hidden="true">{theme === "dark" ? "☀" : "☾"}</span>
+          <span aria-hidden="true">{theme === "dark" ? <svgIcons.SunIcon /> : <svgIcons.MoonIcon />}</span>
         </button>
 
         {message && <div className="toast" onAnimationEnd={() => setMessage("")}>{message}</div>}
@@ -605,7 +608,9 @@ function App() {
             >
               <div className="text-extract-header">
                 <h3 id="text-extract-title">Page {extractedPage.page} text</h3>
-                <button className="icon-button" onClick={() => setExtractedPage(null)} title="Close">×</button>
+                <button className="icon-button" onClick={() => setExtractedPage(null)} title="Close">
+                  <svgIcons.CloseIcon />
+                </button>
               </div>
               <pre>{extractedPage.text}</pre>
             </section>

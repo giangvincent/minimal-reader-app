@@ -2,22 +2,20 @@
 import React from 'react';
 
 export const ChevronLeftIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-    <path d="M15.5 4.088c-1.104 0-2 .896-2 2V18c0 1.104.896 2 2 2s2-.896 2-2V6.088c0-1.104-.896-2-2-2z" fill="currentColor"/>
-    <path d="M5.5 12L15.5 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" shapeRendering="crispEdges">
+    <path d="M16 5h-3v3h-3v3H7v2h3v3h3v3h3v-3h-3v-3h-3v-2h3V8h3V5z" fill="currentColor"/>
   </svg>
 );
 
 export const ChevronRightIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-    <path d="M8.5 4.088c1.104 0 2 .896 2 2V18c0 1.104-.896 2-2 2s-2-.896-2-2V6.088c0-1.104.896-2 2-2z" fill="currentColor"/>
-    <path d="M18.5 12L8.5 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" shapeRendering="crispEdges">
+    <path d="M8 5h3v3h3v3h3v2h-3v3h-3v3H8v-3h3v-3h3v-2h-3V8H8V5z" fill="currentColor"/>
   </svg>
 );
 
 export const PlusIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-    <path d="M12 4V20M4 12H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" shapeRendering="crispEdges">
+    <path d="M10 4h4v6h6v4h-6v6h-4v-6H4v-4h6V4z" fill="currentColor"/>
   </svg>
 );
 
@@ -35,13 +33,19 @@ export const SearchIcon = () => (
 );
 
 export const MoonIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" shapeRendering="crispEdges">
     <path d="M12 19.5a7.5 7.5 0 100-15 7.5 7.5 0 000 15zM2.25 12C2.25 6.613 6.613 2.25 12 2.25s9.75 4.363 9.75 9.75-4.363 9.75-9.75 9.75S2.25 17.387 2.25 12z" fill="currentColor"/>
   </svg>
 );
 
 export const SunIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-    <path d="M12 3v2M12 19v2M19 12h2M5 12H3M6.228 6.228l-1.414 1.414M17.657 17.657l-1.414 1.414M17.657 6.343l-1.414-1.414m0 11.314l-1.414 1.414M6.343 17.657l-1.414 1.414" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" shapeRendering="crispEdges">
+    <path d="M10 2h4v4h-4V2zm0 16h4v4h-4v-4zM2 10h4v4H2v-4zm16 0h4v4h-4v-4zM8 8h8v8H8V8zM5 4h3v3H5V4zm11 0h3v3h-3V4zM5 17h3v3H5v-3zm11 0h3v3h-3v-3z" fill="currentColor"/>
+  </svg>
+);
+
+export const CloseIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" shapeRendering="crispEdges">
+    <path d="M5 4h4v4h2v2h2V8h2V4h4v4h-2v2h-2v4h2v2h2v4h-4v-4h-2v-2h-2v2H9v4H5v-4h2v-2h2v-4H7V8H5V4z" fill="currentColor"/>
   </svg>
 );
