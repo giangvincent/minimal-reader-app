@@ -518,8 +518,8 @@ function App() {
               </select>
             )}
             <button onClick={() => setZoomMode(FIT)} className={zoomMode === FIT ? "selected" : ""}>Fit</button>
-            <button onClick={() => changeZoom(-1)} title="Zoom out">-</button>
-            <button onClick={() => changeZoom(1)} title="Zoom in">+</button>
+            <button onClick={() => changeZoom(-1)} title="Zoom out" style={{"font-size": "24px"}}>-</button>
+            <button onClick={() => changeZoom(1)} title="Zoom in" style={{"font-size": "24px"}}>+</button>
             <button onClick={deleteActiveDoc} disabled={!activeDoc}>Delete</button>
           </div>
         </header>

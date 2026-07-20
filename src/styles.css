@@ -236,16 +236,16 @@ select:focus-visible {
 }
 
 .icon-button {
+  display: flex;
+  flex-shrink: 0;
+  justify-content: center;
+  align-items: center;
   padding: 0;
   width: 42px;
   height: 42px;
   color: var(--white);
   font-size: 0;
   line-height: 1;
-}
-
-.sidebar-toggle {
-  flex-shrink: 0;
 }
 
 .icon-button svg,
