@@ -155,6 +155,7 @@ function App() {
   const canvasRef = useRef(null);
   const stageRef = useRef(null);
   const textPageRef = useRef(null);
+  const swipeStartRef = useRef(null);
 
   const folders = useMemo(() => {
     const unique = new Set(["Library", ...customFolders, ...docs.map((doc) => doc.folder || "Library")]);
@@ -180,6 +181,24 @@ function App() {
     if (stageRef.current) stageRef.current.scrollTop = 0;
     await persistDoc({ ...activeDoc, page: nextPage });
   }, [activeDoc, totalPages]);
+
+  const handleSwipeStart = useCallback((event) => {
+    if (window.innerWidth > 524 || event.target.closest("button, input, select, label")) return;
+    const touch = event.touches[0];
+    swipeStartRef.current = { x: touch.clientX, y: touch.clientY };
+  }, []);
+
+  const handleSwipeEnd = useCallback((event) => {
+    const start = swipeStartRef.current;
+    swipeStartRef.current = null;
+    if (!start || !activeDoc) return;
+
+    const touch = event.changedTouches[0];
+    const deltaX = touch.clientX - start.x;
+    const deltaY = touch.clientY - start.y;
+    if (Math.abs(deltaX) < 64 || Math.abs(deltaX) <= Math.abs(deltaY)) return;
+    goToPage(currentPage + (deltaX < 0 ? 1 : -1));
+  }, [activeDoc, currentPage, goToPage]);
 
   useEffect(() => {
     listDocs().then((items) => {
@@ -295,7 +314,8 @@ function App() {
         const page = await pdf.getPage(currentPage);
         const baseViewport = page.getViewport({ scale: 1 });
         const stage = stageRef.current;
-        const availableWidth = Math.max((stage?.clientWidth || 900) - 176, 320);
+        const railWidth = window.innerWidth <= 600 ? 0 : 176;
+        const availableWidth = Math.max((stage?.clientWidth || 900) - railWidth, 1);
         const fitScale = availableWidth / baseViewport.width;
         const scale = zoomMode === FIT ? fitScale : manualZoom;
         const viewport = page.getViewport({ scale });
@@ -508,6 +528,13 @@ function App() {
       <section className="reader">
         <header className="toolbar">
           <div className="title-block">
+            <button
+              className="icon-button toolbar-sidebar-toggle"
+              onClick={() => setIsSidebarCollapsed((value) => !value)}
+              title={isSidebarCollapsed ? "Show sidebar" : "Hide sidebar"}
+            >
+              <svgIcons.ChevronLeftIcon />
+            </button>
             <span>{activeDoc?.folder || "Library"}</span>
             <h2>{activeDoc?.name || "No document selected"}</h2>
           </div>
@@ -518,8 +545,8 @@ function App() {
               </select>
             )}
             <button onClick={() => setZoomMode(FIT)} className={zoomMode === FIT ? "selected" : ""}>Fit</button>
-            <button onClick={() => changeZoom(-1)} title="Zoom out" style={{"font-size": "24px"}}>-</button>
-            <button onClick={() => changeZoom(1)} title="Zoom in" style={{"font-size": "24px"}}>+</button>
+            <button onClick={() => changeZoom(-1)} title="Zoom out" style={{ fontSize: "24px" }}>-</button>
+            <button onClick={() => changeZoom(1)} title="Zoom in" style={{ fontSize: "24px" }}>+</button>
             <button onClick={deleteActiveDoc} disabled={!activeDoc}>Delete</button>
           </div>
         </header>
@@ -547,7 +574,13 @@ function App() {
           )}
         </div>
 
-        <div className="stage" ref={stageRef} style={{ "--page-rail-height": `${pageRailHeight}px` }}>
+        <div
+          className="stage"
+          ref={stageRef}
+          style={{ "--page-rail-height": `${pageRailHeight}px` }}
+          onTouchStart={handleSwipeStart}
+          onTouchEnd={handleSwipeEnd}
+        >
           {!activeDoc && (
             <div className="welcome">
               <h3>{docs.length ? "This folder is empty" : "Import a PDF, DOCX, DOC, or TXT file"}</h3>
