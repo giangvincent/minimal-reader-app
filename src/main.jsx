@@ -177,6 +177,7 @@ function App() {
   const goToPage = useCallback(async (page) => {
     if (!activeDoc) return;
     const nextPage = Math.min(Math.max(page, 1), totalPages);
+    if (stageRef.current) stageRef.current.scrollTop = 0;
     await persistDoc({ ...activeDoc, page: nextPage });
   }, [activeDoc, totalPages]);
 
@@ -523,7 +524,7 @@ function App() {
           </div>
         </header>
 
-        <div className="stage" ref={stageRef} style={{ "--page-rail-height": `${pageRailHeight}px` }}>
+        <div className="doc-nav">
           {activeDoc && (
             <>
               <button
@@ -544,7 +545,9 @@ function App() {
               </button>
             </>
           )}
+        </div>
 
+        <div className="stage" ref={stageRef} style={{ "--page-rail-height": `${pageRailHeight}px` }}>
           {!activeDoc && (
             <div className="welcome">
               <h3>{docs.length ? "This folder is empty" : "Import a PDF, DOCX, DOC, or TXT file"}</h3>
