@@ -470,7 +470,9 @@ select:focus-visible {
   border-bottom: 6px solid #090909;
   background: var(--toolbar-bg);
   padding: 14px 24px;
+  width: 100%;
   min-height: 82px;
+  overflow: hidden;
 }
 
 .title-block {
