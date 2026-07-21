@@ -83,7 +83,6 @@
   /* image-rendering: pixelated; */
   color: var(--text);
   /* text-rendering: geometricPrecision; */
-  -webkit-font-smoothing: none;
 }
 
 :root[data-theme="dark"] {
