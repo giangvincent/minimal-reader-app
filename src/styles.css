@@ -1242,8 +1242,7 @@ select:focus-visible {
   }
 }
 
-.theme-toggle,
-.toast {
+.theme-toggle {
   animation: slideIn 180ms steps(3, end) forwards;
 }
 
@@ -1251,8 +1250,7 @@ select:focus-visible {
   animation: pageFloatIn 180ms steps(3, end) forwards;
 }
 
-.theme-toggle.exiting,
-.toast.exiting {
+.theme-toggle.exiting {
   animation: slideOut 180ms steps(3, end) forwards;
 }
 

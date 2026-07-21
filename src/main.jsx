@@ -432,17 +432,21 @@ function App() {
     setEpubState({ loading: true, chapter: 0, chapterCount: 0, page: 0, pageCount: activeDoc.pageCount || 0, error: "" });
 
     let touchStart;
-    rendition.on("touchstart", (event) => {
+    const onTouchStart = (event) => {
       const touch = event.touches[0];
       touchStart = touch && { x: touch.clientX, y: touch.clientY };
-    });
-    rendition.on("touchend", (event) => {
+    };
+    const onTouchEnd = (event) => {
       const touch = event.changedTouches[0];
       if (!touchStart || !touch) return;
       const { x, y } = touchStart;
       touchStart = null;
       if (Math.abs(touch.clientX - x) < 64 || Math.abs(touch.clientX - x) <= Math.abs(touch.clientY - y)) return;
       turnEpubPage(rendition, touch.clientX < x);
+    };
+    rendition.hooks.content.register((contents) => {
+      contents.document.addEventListener("touchstart", onTouchStart, { passive: true });
+      contents.document.addEventListener("touchend", onTouchEnd, { passive: true });
     });
 
     rendition.on("relocated", (location) => {
@@ -453,7 +457,7 @@ function App() {
       const chapterCount = book.spine.length || 1;
       setEpubState({ loading: false, chapter, chapterCount, page, pageCount, error: "" });
       if (activeDoc.page !== page || activeDoc.pageCount !== pageCount || activeDoc.epubCfi !== location.start.cfi) {
-        persistDoc({ ...activeDoc, page, pageCount, epubCfi: location.start.cfi }, false);
+        persistDoc({ ...activeDoc, page, pageCount, epubCfi: location.start.cfi });
       }
     });
 
