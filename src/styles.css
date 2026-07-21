@@ -80,9 +80,9 @@
     0 0 0 6px #090909, 0 18px 0 #17080b, 0 0 42px rgb(255 88 103 / 0.24);
   --focus-ring: 0 0 0 6px rgb(241 103 117 / 0.45);
   background: var(--app-bg);
-  image-rendering: pixelated;
+  /* image-rendering: pixelated; */
   color: var(--text);
-  text-rendering: geometricPrecision;
+  /* text-rendering: geometricPrecision; */
   -webkit-font-smoothing: none;
 }
 
