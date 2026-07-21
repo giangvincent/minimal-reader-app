@@ -174,6 +174,7 @@ function App() {
       return false;
     }
   });
+  const [isReaderChromeHidden, setIsReaderChromeHidden] = useState(false);
   const [activeId, setActiveId] = useState(null);
   const [folder, setFolder] = useState("Library");
   const [pageInput, setPageInput] = useState("1");
@@ -701,16 +702,16 @@ function App() {
           </button>
         </div>
 
-        <label className="import-button">
+        <label className="sidebar-button import-button">
           <input accept=".pdf,.txt,.doc,.docx,.epub,application/pdf,application/epub+zip,text/plain" multiple onChange={handleImport} type="file" />
           Import
         </label>
 
-        <button className="sync-button" onClick={syncWithGoogle} disabled={isSyncing}>
+        <button className="sidebar-button sync-button" onClick={syncWithGoogle} disabled={isSyncing}>
           {isSyncing ? "Syncing..." : "Sync Drive"}
         </button>
 
-        <button className="delete-library-button" onClick={deleteLibrary} disabled={!docs.length}>
+        <button className="sidebar-button delete-library-button" onClick={deleteLibrary} disabled={!docs.length}>
           Delete library
         </button>
 
@@ -732,10 +733,20 @@ function App() {
           ))}
           {!visibleDocs.length && <p className="empty">Import files or create a folder to begin.</p>}
         </div>
+
+        <button
+          className="icon-button reader-chrome-toggle"
+          onClick={() => setIsReaderChromeHidden((value) => !value)}
+          title={isReaderChromeHidden ? "Show reader controls" : "Hide reader controls"}
+          aria-label={isReaderChromeHidden ? "Show reader controls" : "Hide reader controls"}
+          aria-pressed={isReaderChromeHidden}
+        >
+          UI
+        </button>
       </aside>
 
       <section className="reader">
-        <header className="toolbar">
+        <header className={isReaderChromeHidden ? "toolbar reader-chrome-hidden" : "toolbar"}>
           <div className="title-block">
             <button
               className="icon-button toolbar-sidebar-toggle"
@@ -821,7 +832,7 @@ function App() {
         </div>
 
         {activeDoc && (
-          <footer className="page-float">
+          <footer className={isReaderChromeHidden ? "page-float reader-chrome-hidden" : "page-float"}>
             <button onClick={() => goToPage(currentPage - 1)} disabled={activeDoc.kind !== "epub" && currentPage <= 1}>Prev</button>
             <button onClick={extractCurrentPageText} disabled={isExtractingPage}>
               {isExtractingPage ? "Extracting..." : "Extract text"}

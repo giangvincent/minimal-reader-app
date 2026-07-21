@@ -131,7 +131,7 @@ select:focus-visible {
 
 .app-shell {
   display: grid;
-  grid-template-columns: 292px minmax(0, 1fr);
+  grid-template-columns: 350px minmax(0, 1fr);
   transition: none;
   background:
     radial-gradient(
@@ -149,14 +149,15 @@ select:focus-visible {
 
 .sidebar {
   display: flex;
-  flex-direction: column;
-  gap: 18px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 10px;
   transition: none;
   border-right: 6px solid #090909;
   background: var(--sidebar-bg);
   padding: 22px 18px;
   min-width: 0;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .brand {
@@ -257,9 +258,11 @@ select:focus-visible {
   height: 20px;
 }
 
-.import-button {
-  display: grid;
-  place-items: center;
+.sidebar-button {
+  display: flex;
+  flex-shrink: 0;
+  justify-content: center;
+  align-items: center;
   clip-path: var(--pixel-corners);
   transition: none;
   cursor: pointer;
@@ -267,10 +270,11 @@ select:focus-visible {
   border: 0;
   border-radius: 0;
   background: var(--primary);
-  height: 46px;
+  width: 30%;
+  height: 40px;
   color: var(--primary-text);
   font-weight: 900;
-  font-size: 15px;
+  font-size: 13px;
   letter-spacing: 1px;
   text-shadow:
     2px 0 #69242a,
@@ -296,40 +300,18 @@ select:focus-visible {
 }
 
 .delete-library-button {
-  display: grid;
-  place-items: center;
-  clip-path: var(--pixel-corners);
-  transition: none;
-  cursor: pointer;
   box-shadow:
     inset 0 5px 0 rgb(255 255 255 / 0.08),
     inset 0 -6px 0 #2a1116,
     0 6px 0 #090909;
-  border: 0;
-  border-radius: 0;
   background: var(--panel-bg);
-  height: 40px;
   color: #f4a2a9;
-  font-weight: 900;
-  font-size: 13px;
-  letter-spacing: 0.8px;
-  text-transform: uppercase;
 }
 
 .sync-button {
-  display: grid;
-  place-items: center;
-  clip-path: var(--pixel-corners);
-  cursor: pointer;
   box-shadow: var(--control-shadow);
-  border: 0;
   background: var(--control-bg);
-  height: 40px;
   color: var(--text);
-  font-weight: 900;
-  font-size: 13px;
-  letter-spacing: 0.8px;
-  text-transform: uppercase;
 }
 
 .sync-button:hover:not(:disabled) {
@@ -355,6 +337,7 @@ select:focus-visible {
   align-items: center;
   gap: 14px;
   padding: 18px 10px;
+  overflow: hidden;
 }
 
 .sidebar-collapsed .brand {
@@ -371,6 +354,23 @@ select:focus-visible {
 .sidebar-collapsed .folders,
 .sidebar-collapsed .document-list {
   display: none;
+}
+
+.reader-chrome-toggle {
+  display: none;
+}
+
+.sidebar-collapsed .reader-chrome-toggle {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  width: 42px;
+  height: 42px;
+  font-size: 11px;
+}
+
+.reader-chrome-hidden {
+  display: none !important;
 }
 
 .sidebar-collapsed .sidebar::after {
@@ -391,8 +391,9 @@ select:focus-visible {
 }
 
 .folders {
-  display: grid;
+  display: flex;
   gap: 12px;
+  width: 100%;
 }
 
 .folders button,
@@ -448,9 +449,11 @@ select:focus-visible {
 }
 
 .document-list {
-  display: grid;
-  align-content: start;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
   gap: 8px;
+  width: 100%;
   min-height: 0;
   overflow: auto;
 }
@@ -459,7 +462,6 @@ select:focus-visible {
   flex-direction: column;
   gap: 5px;
   padding: 12px 12px 15px;
-  overflow: hidden;
 }
 
 .doc strong {
@@ -469,6 +471,8 @@ select:focus-visible {
   font-size: 14px;
   line-height: 1.3;
   letter-spacing: 0.3px;
+  overflow-wrap: break-word; /* Modern standard */
+  word-wrap: break-word;
 }
 
 .empty {
@@ -694,10 +698,13 @@ select:focus-visible {
 }
 
 .page-float button {
+  flex: 1;
   border-radius: 0;
   padding: 0 12px;
+  width: 100%;
   height: 38px;
-  font-size: 13px;
+  font-size: 12px;
+  white-space: nowrap;
 }
 
 .page-float form {
@@ -981,7 +988,7 @@ select:focus-visible {
     border-bottom: 6px solid #090909;
     padding: 12px 14px 10px;
     width: 100%;
-    overflow: hidden;
+    height: 100dvh;
   }
 
   .brand {
@@ -1048,7 +1055,6 @@ select:focus-visible {
     grid-column: 1 / -1;
     gap: 8px;
     overflow-x: auto;
-    overflow-y: hidden;
     scrollbar-width: none;
   }
 
