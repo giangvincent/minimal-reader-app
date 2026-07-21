@@ -45,6 +45,16 @@ function applyEpubTheme(rendition, theme) {
   rendition.themes.override("color", dark ? "#fff8f2" : "#151014", true);
 }
 
+function turnEpubPage(rendition, forward) {
+  const location = rendition.location;
+  const displayed = location?.start?.displayed;
+  if (forward && displayed?.page >= displayed.total) {
+    const next = rendition.book.spine.get(location.start.index)?.next();
+    if (next) return rendition.display(next.href);
+  }
+  return forward ? rendition.next() : rendition.prev();
+}
+
 function openDb() {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, 1);
@@ -222,10 +232,11 @@ function App() {
 
   const goToPage = useCallback(async (page) => {
     if (!activeDoc) return;
+    const forward = page > currentPage;
     const nextPage = Math.min(Math.max(page, 1), totalPages);
     if (activeDoc.kind === "epub") {
       const rendition = epubRenditionRef.current;
-      if (rendition) await (nextPage > currentPage ? rendition.next() : rendition.prev());
+      if (rendition) await turnEpubPage(rendition, forward);
       return;
     }
     if (stageRef.current) stageRef.current.scrollTop = 0;
@@ -431,7 +442,7 @@ function App() {
       const { x, y } = touchStart;
       touchStart = null;
       if (Math.abs(touch.clientX - x) < 64 || Math.abs(touch.clientX - x) <= Math.abs(touch.clientY - y)) return;
-      (touch.clientX < x ? rendition.next() : rendition.prev());
+      turnEpubPage(rendition, touch.clientX < x);
     });
 
     rendition.on("relocated", (location) => {
@@ -486,10 +497,22 @@ function App() {
       await loadGoogleIdentity();
       const token = await requestDriveToken(GOOGLE_CLIENT_ID);
       const files = await listDriveFiles(token);
-      const manifestFile = files.find((file) => file.name === googleDriveManifestName);
-      const remote = manifestFile
-        ? JSON.parse(new TextDecoder().decode(await downloadDriveFile(token, manifestFile.id)))
-        : { docs: [], folders: [], deletedDocs: {} };
+      const manifestFiles = files.filter((file) => file.name === googleDriveManifestName);
+      const manifests = await Promise.all(manifestFiles.map(async (file) => JSON.parse(new TextDecoder().decode(await downloadDriveFile(token, file.id)))));
+      const remote = manifests.reduce((library, next) => {
+        const documents = new Map(library.docs.map((doc) => [doc.id, doc]));
+        for (const doc of next.docs || []) {
+          if (!documents.has(doc.id) || doc.updatedAt >= documents.get(doc.id).updatedAt) documents.set(doc.id, doc);
+        }
+        const deletedDocs = { ...library.deletedDocs, ...next.deletedDocs };
+        for (const [id, time] of Object.entries(next.deletedDocs || {})) deletedDocs[id] = Math.max(time, library.deletedDocs[id] || 0);
+        return { docs: [...documents.values()], folders: [...new Set([...library.folders, ...(next.folders || [])])], deletedDocs };
+      }, { docs: [], folders: [], deletedDocs: {} });
+      const manifestFile = manifestFiles[0];
+      if (!manifestFile && !docs.length) {
+        setMessage("No Drive library found yet. Sync the device that has your files first.");
+        return;
+      }
       const mergedDeletions = { ...remote.deletedDocs, ...deletedDocs };
       for (const [id, time] of Object.entries(remote.deletedDocs || {})) {
         mergedDeletions[id] = Math.max(time, deletedDocs[id] || 0);
@@ -542,7 +565,7 @@ function App() {
       setActiveId((id) => mergedDocs.some((doc) => doc.id === id) ? id : mergedDocs[0]?.id || null);
       setCustomFolders(nextFolders);
       setDeletedDocs(mergedDeletions);
-      setMessage("Google Drive sync complete.");
+      setMessage(`Google Drive sync complete: ${mergedDocs.length} file${mergedDocs.length === 1 ? "" : "s"}.`);
     } catch (error) {
       setMessage(error.message || "Google Drive sync failed.");
     } finally {

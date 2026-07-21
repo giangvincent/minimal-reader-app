@@ -33,7 +33,12 @@ async function driveFetch(token, url, options = {}) {
 
 export async function listDriveFiles(token) {
   const url = new URL(DRIVE_API);
-  url.search = new URLSearchParams({ spaces: "appDataFolder", fields: "files(id,name,modifiedTime)" });
+  url.search = new URLSearchParams({
+    spaces: "appDataFolder",
+    orderBy: "modifiedTime desc",
+    pageSize: "1000",
+    fields: "files(id,name,modifiedTime)"
+  });
   return (await (await driveFetch(token, url)).json()).files || [];
 }
 
