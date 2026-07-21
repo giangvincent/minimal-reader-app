@@ -3,6 +3,8 @@ import { createRoot } from "react-dom/client";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfWorker from "pdfjs-dist/build/pdf.worker.mjs?url";
 import mammoth from "mammoth/mammoth.browser";
+import ePub from "epubjs";
+import DefaultViewManager from "epubjs/src/managers/default";
 import "./styles.css";
 import * as svgIcons from "./svg-icons.jsx";
 
@@ -13,6 +15,20 @@ const STORE_NAME = "documents";
 const PAGE_CHARS = 2600;
 const FIT = "fit";
 const manualZooms = [0.7, 0.85, 1, 1.15, 1.35, 1.6, 1.9, 2.25];
+
+class ReaderViewManager extends DefaultViewManager {
+  addEventListeners() {
+    const scroller = this.settings.fullsize ? window : this.container;
+    this._onScroll = this.onScroll.bind(this);
+    scroller.addEventListener("scroll", this._onScroll);
+  }
+}
+
+function applyEpubTheme(rendition, theme) {
+  const dark = theme === "dark";
+  rendition.themes.override("background-color", dark ? "#151014" : "#fff8f2", true);
+  rendition.themes.override("color", dark ? "#fff8f2" : "#151014", true);
+}
 
 function openDb() {
   return new Promise((resolve, reject) => {
@@ -69,6 +85,7 @@ function fileKind(file) {
   if (file.type === "text/plain" || name.endsWith(".txt")) return "txt";
   if (name.endsWith(".docx")) return "docx";
   if (name.endsWith(".doc")) return "doc";
+  if (file.type === "application/epub+zip" || name.endsWith(".epub")) return "epub";
   return "unknown";
 }
 
@@ -109,6 +126,9 @@ async function extractDocument(file, kind) {
       buffer
     };
   }
+  if (kind === "epub") {
+    return { text: "", buffer };
+  }
   return { text: "", buffer };
 }
 
@@ -147,12 +167,15 @@ function App() {
   const [fitZoom, setFitZoom] = useState(1);
   const [pageRailHeight, setPageRailHeight] = useState(420);
   const [pdfState, setPdfState] = useState({ loading: false, pageCount: 0, error: "" });
+  const [epubState, setEpubState] = useState({ loading: false, chapter: 0, chapterCount: 0, page: 0, pageCount: 0, error: "" });
   const [message, setMessage] = useState("");
   const [isFolderDialogOpen, setIsFolderDialogOpen] = useState(false);
   const [folderName, setFolderName] = useState("");
   const [extractedPage, setExtractedPage] = useState(null);
   const [isExtractingPage, setIsExtractingPage] = useState(false);
   const canvasRef = useRef(null);
+  const epubRef = useRef(null);
+  const epubRenditionRef = useRef(null);
   const stageRef = useRef(null);
   const textPageRef = useRef(null);
   const swipeStartRef = useRef(null);
@@ -167,20 +190,29 @@ function App() {
   const activeDoc = selectedDoc && (selectedDoc.folder || "Library") === folder ? selectedDoc : visibleDocs[0] || null;
 
   const textPages = useMemo(() => {
-    if (!activeDoc || activeDoc.kind === "pdf") return [];
+    if (!activeDoc || activeDoc.kind === "pdf" || activeDoc.kind === "epub") return [];
     return splitPages(activeDoc.text || "");
   }, [activeDoc]);
 
-  const totalPages = activeDoc?.kind === "pdf" ? pdfState.pageCount || activeDoc.pageCount || 1 : textPages.length || 1;
-  const currentPage = Math.min(Math.max(activeDoc?.page || 1, 1), totalPages);
+  const totalPages = activeDoc?.kind === "pdf"
+    ? pdfState.pageCount || activeDoc.pageCount || 1
+    : activeDoc?.kind === "epub"
+      ? epubState.pageCount || activeDoc.pageCount || 1
+      : textPages.length || 1;
+  const currentPage = Math.min(Math.max(activeDoc?.kind === "epub" ? epubState.page || activeDoc.page || 1 : activeDoc?.page || 1, 1), totalPages);
   const zoom = zoomMode === FIT ? fitZoom : manualZoom;
 
   const goToPage = useCallback(async (page) => {
     if (!activeDoc) return;
     const nextPage = Math.min(Math.max(page, 1), totalPages);
+    if (activeDoc.kind === "epub") {
+      const rendition = epubRenditionRef.current;
+      if (rendition) await (nextPage > currentPage ? rendition.next() : rendition.prev());
+      return;
+    }
     if (stageRef.current) stageRef.current.scrollTop = 0;
     await persistDoc({ ...activeDoc, page: nextPage });
-  }, [activeDoc, totalPages]);
+  }, [activeDoc, currentPage, totalPages]);
 
   const handleSwipeStart = useCallback((event) => {
     if (window.innerWidth > 524 || event.target.closest("button, input, select, label")) return;
@@ -218,6 +250,7 @@ function App() {
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     localStorage.setItem("minimal-reader-theme", theme);
+    if (epubRenditionRef.current) applyEpubTheme(epubRenditionRef.current, theme);
   }, [theme]);
 
   useEffect(() => {
@@ -225,7 +258,7 @@ function App() {
   }, [activeDoc, activeId]);
 
   useLayoutEffect(() => {
-    if (zoomMode !== FIT || !activeDoc || activeDoc.kind === "pdf") return;
+    if (zoomMode !== FIT || !activeDoc || activeDoc.kind === "pdf" || activeDoc.kind === "epub") return;
 
     function measureFitZoom() {
       const stage = stageRef.current;
@@ -249,7 +282,7 @@ function App() {
 
     function measurePageHeight() {
       const stage = stageRef.current;
-      const page = activeDoc.kind === "pdf" ? canvasRef.current : textPageRef.current;
+      const page = activeDoc.kind === "pdf" ? canvasRef.current : activeDoc.kind === "epub" ? epubRef.current : textPageRef.current;
       if (!stage || !page) return;
 
       const pageHeight = page.getBoundingClientRect().height;
@@ -262,6 +295,7 @@ function App() {
     if (stageRef.current) observer.observe(stageRef.current);
     if (textPageRef.current) observer.observe(textPageRef.current);
     if (canvasRef.current) observer.observe(canvasRef.current);
+    if (epubRef.current) observer.observe(epubRef.current);
     return () => observer.disconnect();
   }, [activeDoc?.id, activeDoc?.kind, currentPage, pdfState.loading, zoom]);
 
@@ -344,6 +378,65 @@ function App() {
     };
   }, [activeDoc?.id, currentPage, manualZoom, zoomMode]);
 
+  useEffect(() => {
+    if (!activeDoc || activeDoc.kind !== "epub" || !epubRef.current) return;
+    let cancelled = false;
+    const book = ePub(activeDoc.buffer.slice(0));
+    book.spine.hooks.content.register((document) => {
+      [...document.getElementsByTagName("*")].forEach((element) => {
+        if (element.localName?.toLowerCase() === "script") element.remove();
+      });
+    });
+    const rendition = book.renderTo(epubRef.current, {
+      width: "100%",
+      height: "100%",
+      flow: "paginated",
+      spread: "none",
+      manager: ReaderViewManager
+    });
+    epubRenditionRef.current = rendition;
+    applyEpubTheme(rendition, theme);
+    setEpubState({ loading: true, chapter: 0, chapterCount: 0, page: 0, pageCount: activeDoc.pageCount || 0, error: "" });
+
+    let touchStart;
+    rendition.on("touchstart", (event) => {
+      const touch = event.touches[0];
+      touchStart = touch && { x: touch.clientX, y: touch.clientY };
+    });
+    rendition.on("touchend", (event) => {
+      const touch = event.changedTouches[0];
+      if (!touchStart || !touch) return;
+      const { x, y } = touchStart;
+      touchStart = null;
+      if (Math.abs(touch.clientX - x) < 64 || Math.abs(touch.clientX - x) <= Math.abs(touch.clientY - y)) return;
+      (touch.clientX < x ? rendition.next() : rendition.prev());
+    });
+
+    rendition.on("relocated", (location) => {
+      if (cancelled) return;
+      const page = location.start.displayed.page || 1;
+      const pageCount = location.start.displayed.total || 1;
+      const chapter = (location.start.index || 0) + 1;
+      const chapterCount = book.spine.length || 1;
+      setEpubState({ loading: false, chapter, chapterCount, page, pageCount, error: "" });
+      if (activeDoc.page !== page || activeDoc.pageCount !== pageCount || activeDoc.epubCfi !== location.start.cfi) {
+        persistDoc({ ...activeDoc, page, pageCount, epubCfi: location.start.cfi }, false);
+      }
+    });
+
+    Promise.resolve()
+      .then(() => book.ready)
+      .then(() => rendition.display(activeDoc.epubCfi))
+      .catch(() => !cancelled && setEpubState({ loading: false, pageCount: 0, error: "Unable to render this EPUB." }));
+
+    return () => {
+      cancelled = true;
+      epubRenditionRef.current = null;
+      rendition.destroy();
+      book.destroy();
+    };
+  }, [activeDoc?.id]);
+
   async function refreshDocs(nextActiveId) {
     const items = await listDocs();
     setDocs(items);
@@ -362,20 +455,27 @@ function App() {
     if (!files.length) return;
 
     let lastImportedId = null;
+    let importedCount = 0;
     for (const file of files) {
       const kind = fileKind(file);
       if (kind === "unknown") {
         setMessage(`${file.name} is not a supported file type.`);
         continue;
       }
-      const extracted = await extractDocument(file, kind);
+      let extracted;
+      try {
+        extracted = await extractDocument(file, kind);
+      } catch {
+        setMessage(`Unable to read ${file.name}.`);
+        continue;
+      }
       const doc = {
         id: uid(),
         name: file.name,
         kind,
         folder,
         page: 1,
-        pageCount: kind === "pdf" ? 0 : splitPages(extracted.text).length,
+        pageCount: kind === "pdf" || kind === "epub" ? 0 : splitPages(extracted.text).length,
         text: extracted.text,
         buffer: extracted.buffer,
         size: file.size,
@@ -384,9 +484,10 @@ function App() {
       };
       await saveDoc(doc);
       lastImportedId = doc.id;
+      importedCount += 1;
     }
     await refreshDocs(lastImportedId);
-    setMessage(`${files.length} file${files.length === 1 ? "" : "s"} imported.`);
+    setMessage(`${importedCount} file${importedCount === 1 ? "" : "s"} imported.`);
   }
 
   function createFolder() {
@@ -461,6 +562,8 @@ function App() {
         } finally {
           loadingTask.destroy?.();
         }
+      } else if (activeDoc.kind === "epub") {
+        text = epubRef.current?.querySelector("iframe")?.contentDocument?.body?.innerText || "";
       } else {
         text = textPages[currentPage - 1] || "";
       }
@@ -497,7 +600,7 @@ function App() {
         </div>
 
         <label className="import-button">
-          <input accept=".pdf,.txt,.doc,.docx,application/pdf,text/plain" multiple onChange={handleImport} type="file" />
+          <input accept=".pdf,.txt,.doc,.docx,.epub,application/pdf,application/epub+zip,text/plain" multiple onChange={handleImport} type="file" />
           Import
         </label>
 
@@ -557,7 +660,7 @@ function App() {
               <button
                 className="side-page-button side-page-button-left"
                 onClick={() => goToPage(currentPage - 1)}
-                disabled={currentPage <= 1}
+                disabled={activeDoc?.kind !== "epub" && currentPage <= 1}
                 title="Previous page (ArrowLeft or PageUp)"
               >
                 <svgIcons.ChevronLeftIcon />
@@ -565,7 +668,7 @@ function App() {
               <button
                 className="side-page-button side-page-button-right"
                 onClick={() => goToPage(currentPage + 1)}
-                disabled={currentPage >= totalPages}
+                disabled={activeDoc?.kind !== "epub" && currentPage >= totalPages}
                 title="Next page (ArrowRight, Space, or PageDown)"
               >
                 <svgIcons.ChevronRightIcon />
@@ -596,7 +699,15 @@ function App() {
             </div>
           )}
 
-          {activeDoc && activeDoc.kind !== "pdf" && (
+          {activeDoc?.kind === "epub" && (
+            <div className="epub-page">
+              {epubState.loading && <span className="loading">Loading book...</span>}
+              {epubState.error && <span className="loading">{epubState.error}</span>}
+              <div ref={epubRef} />
+            </div>
+          )}
+
+          {activeDoc && activeDoc.kind !== "pdf" && activeDoc.kind !== "epub" && (
             <article className="text-page" ref={textPageRef} style={{ transform: `scale(${zoom})` }}>
               <pre>{textPages[currentPage - 1]}</pre>
             </article>
@@ -605,20 +716,24 @@ function App() {
 
         {activeDoc && (
           <footer className="page-float">
-            <button onClick={() => goToPage(currentPage - 1)} disabled={currentPage <= 1}>Prev</button>
+            <button onClick={() => goToPage(currentPage - 1)} disabled={activeDoc.kind !== "epub" && currentPage <= 1}>Prev</button>
             <button onClick={extractCurrentPageText} disabled={isExtractingPage}>
               {isExtractingPage ? "Extracting..." : "Extract text"}
             </button>
-            <form
-              onSubmit={(event) => {
-                event.preventDefault();
-                goToPage(Number(pageInput));
-              }}
-            >
-              <input inputMode="numeric" value={pageInput} onChange={(event) => setPageInput(event.target.value.replace(/\D/g, ""))} />
-              <span>/ {totalPages}</span>
-            </form>
-            <button onClick={() => goToPage(currentPage + 1)} disabled={currentPage >= totalPages}>Next</button>
+            {activeDoc.kind === "epub" ? (
+              <span className="epub-location">Chapter {epubState.chapter || 1} / {epubState.chapterCount || 1} · Page {currentPage} / {totalPages}</span>
+            ) : (
+              <form
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  goToPage(Number(pageInput));
+                }}
+              >
+                <input inputMode="numeric" value={pageInput} onChange={(event) => setPageInput(event.target.value.replace(/\D/g, ""))} />
+                <span>/ {totalPages}</span>
+              </form>
+            )}
+            <button onClick={() => goToPage(currentPage + 1)} disabled={activeDoc.kind !== "epub" && currentPage >= totalPages}>Next</button>
           </footer>
         )}
 

@@ -585,6 +585,21 @@ select:focus-visible {
   min-width: 0;
 }
 
+.epub-page {
+  position: relative;
+  box-shadow: var(--page-shadow);
+  background: var(--page-bg);
+  width: min(920px, calc(100vw - 420px));
+  height: min(920px, calc(100vh - 190px));
+  min-height: 420px;
+  overflow: hidden;
+}
+
+.epub-page > div {
+  width: 100%;
+  height: 100%;
+}
+
 .pdf-page canvas,
 .text-page {
   box-shadow: var(--page-shadow);
@@ -631,7 +646,7 @@ select:focus-visible {
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
     monospace;
   letter-spacing: 0;
-  white-space: pre-wrap;
+  white-space: pre-line;
 }
 
 .page-float {
@@ -680,6 +695,12 @@ select:focus-visible {
   color: var(--ink);
   font-weight: 900;
   text-align: center;
+}
+
+.epub-location {
+  color: var(--text);
+  font-size: 12px;
+  white-space: nowrap;
 }
 
 .doc-nav {
@@ -1063,10 +1084,16 @@ select:focus-visible {
   }
 
   .text-page {
-    padding: 28px 22px;
+    padding: 28px 22px 100px;
     width: calc(100vw - 28px);
     max-width: calc(100vw - 28px);
     min-height: 0;
+  }
+
+  .epub-page {
+    width: calc(100vw - 28px);
+    height: calc(100vh - 210px);
+    min-height: 360px;
   }
 
   .text-page pre {

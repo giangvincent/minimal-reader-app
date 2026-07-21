@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@vitejs/plugin-react": "^4.3.4",
+    "epubjs": "0.3.93",
     "mammoth": "^1.8.0",
     "pdfjs-dist": "^4.10.38",
     "react": "^19.0.0",
@@ -22,10 +23,13 @@
   },
   "devDependencies": {
     "concurrently": "^9.1.2",
-    "electron": "^33.2.1",
-    "electron-builder": "^25.1.8",
+    "electron": "^41.7.1",
+    "electron-builder": "^26.15.3",
     "playwright": "^1.57.0",
     "wait-on": "^8.0.1"
+  },
+  "overrides": {
+    "@xmldom/xmldom": "0.8.13"
   },
   "build": {
     "appId": "com.minimalreader.app",
