@@ -316,6 +316,31 @@ select:focus-visible {
   text-transform: uppercase;
 }
 
+.sync-button {
+  display: grid;
+  place-items: center;
+  clip-path: var(--pixel-corners);
+  cursor: pointer;
+  box-shadow: var(--control-shadow);
+  border: 0;
+  background: var(--control-bg);
+  height: 40px;
+  color: var(--text);
+  font-weight: 900;
+  font-size: 13px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.sync-button:hover:not(:disabled) {
+  background: var(--control-hover);
+}
+
+.sync-button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
 .delete-library-button:hover:not(:disabled) {
   background: #281116;
   color: var(--white);
@@ -341,6 +366,7 @@ select:focus-visible {
 .sidebar-collapsed .brand-copy,
 .sidebar-collapsed .create-folder-button,
 .sidebar-collapsed .import-button,
+.sidebar-collapsed .sync-button,
 .sidebar-collapsed .delete-library-button,
 .sidebar-collapsed .folders,
 .sidebar-collapsed .document-list {
@@ -947,7 +973,7 @@ select:focus-visible {
     top: 0;
     right: 0;
     left: 0;
-    grid-template-rows: 40px 40px 36px minmax(44px, 1fr);
+    grid-template-rows: 40px 40px 40px 36px minmax(44px, 1fr);
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px 10px;
     z-index: 10;
@@ -979,6 +1005,7 @@ select:focus-visible {
   }
 
   .import-button,
+  .sync-button,
   .delete-library-button {
     flex: 1;
     min-width: 0;
@@ -987,6 +1014,7 @@ select:focus-visible {
   }
 
   .sidebar > .import-button,
+  .sidebar > .sync-button,
   .sidebar > .delete-library-button {
     display: inline-grid;
     width: 100%;

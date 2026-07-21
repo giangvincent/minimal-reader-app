@@ -5,6 +5,7 @@ import pdfWorker from "pdfjs-dist/build/pdf.worker.mjs?url";
 import mammoth from "mammoth/mammoth.browser";
 import ePub from "epubjs";
 import DefaultViewManager from "epubjs/src/managers/default";
+import { downloadDriveFile, googleDriveManifestName, listDriveFiles, loadGoogleIdentity, requestDriveToken, uploadDriveFile } from "./google-drive.js";
 import "./styles.css";
 import * as svgIcons from "./svg-icons.jsx";
 
@@ -15,6 +16,20 @@ const STORE_NAME = "documents";
 const PAGE_CHARS = 2600;
 const FIT = "fit";
 const manualZooms = [0.7, 0.85, 1, 1.15, 1.35, 1.6, 1.9, 2.25];
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+const DELETED_DOCS_KEY = "minimal-reader-deleted-docs";
+
+function storedDeletions() {
+  try {
+    return JSON.parse(localStorage.getItem(DELETED_DOCS_KEY) || "{}");
+  } catch {
+    return {};
+  }
+}
+
+function mimeType(kind) {
+  return { pdf: "application/pdf", txt: "text/plain", docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", epub: "application/epub+zip" }[kind] || "application/octet-stream";
+}
 
 class ReaderViewManager extends DefaultViewManager {
   addEventListeners() {
@@ -173,6 +188,8 @@ function App() {
   const [folderName, setFolderName] = useState("");
   const [extractedPage, setExtractedPage] = useState(null);
   const [isExtractingPage, setIsExtractingPage] = useState(false);
+  const [deletedDocs, setDeletedDocs] = useState(storedDeletions);
+  const [isSyncing, setIsSyncing] = useState(false);
   const canvasRef = useRef(null);
   const epubRef = useRef(null);
   const epubRenditionRef = useRef(null);
@@ -242,6 +259,10 @@ function App() {
   useEffect(() => {
     localStorage.setItem("minimal-reader-folders", JSON.stringify(customFolders));
   }, [customFolders]);
+
+  useEffect(() => {
+    localStorage.setItem(DELETED_DOCS_KEY, JSON.stringify(deletedDocs));
+  }, [deletedDocs]);
 
   useEffect(() => {
     localStorage.setItem("minimal-reader-sidebar", isSidebarCollapsed ? "collapsed" : "expanded");
@@ -449,6 +470,85 @@ function App() {
     await saveDoc(updated);
   }
 
+  async function syncWithGoogle() {
+    if (!/^https?:$/.test(location.protocol)) {
+      setMessage("Google Drive sync is available from the Vercel web app. Packaged macOS OAuth is not configured yet.");
+      return;
+    }
+    if (!GOOGLE_CLIENT_ID) {
+      setMessage("Add VITE_GOOGLE_CLIENT_ID in Vercel to enable Google Drive sync.");
+      return;
+    }
+
+    setIsSyncing(true);
+    try {
+      await loadGoogleIdentity();
+      const token = await requestDriveToken(GOOGLE_CLIENT_ID);
+      const files = await listDriveFiles(token);
+      const manifestFile = files.find((file) => file.name === googleDriveManifestName);
+      const remote = manifestFile
+        ? JSON.parse(new TextDecoder().decode(await downloadDriveFile(token, manifestFile.id)))
+        : { docs: [], folders: [], deletedDocs: {} };
+      const mergedDeletions = { ...remote.deletedDocs, ...deletedDocs };
+      for (const [id, time] of Object.entries(remote.deletedDocs || {})) {
+        mergedDeletions[id] = Math.max(time, deletedDocs[id] || 0);
+      }
+
+      const remoteDocs = new Map((remote.docs || []).map((doc) => [doc.id, doc]));
+      const localDocs = new Map(docs.map((doc) => [doc.id, doc]));
+      const mergedDocs = [];
+      for (const id of new Set([...remoteDocs.keys(), ...localDocs.keys()])) {
+        const local = localDocs.get(id);
+        const remoteDoc = remoteDocs.get(id);
+        const newest = !remoteDoc || (local && local.updatedAt >= remoteDoc.updatedAt) ? local : remoteDoc;
+        if (newest && (mergedDeletions[id] || 0) < newest.updatedAt) {
+          mergedDocs.push({ ...remoteDoc, ...local, ...newest, remoteFileId: newest.remoteFileId || remoteDoc?.remoteFileId || local?.remoteFileId });
+        }
+      }
+
+      for (const doc of mergedDocs) {
+        const remoteDoc = remoteDocs.get(doc.id);
+        const local = localDocs.get(doc.id);
+        if (local && (!remoteDoc || local.updatedAt > remoteDoc.updatedAt || !remoteDoc.remoteFileId)) {
+          doc.remoteFileId = await uploadDriveFile(token, {
+            id: doc.remoteFileId,
+            name: `minimal-reader-${doc.id}`,
+            data: local.buffer,
+            type: mimeType(doc.kind)
+          });
+          doc.buffer = local.buffer;
+        } else if (doc.remoteFileId) {
+          doc.buffer = await downloadDriveFile(token, doc.remoteFileId);
+        }
+      }
+
+      const nextFolders = [...new Set([...(remote.folders || []), ...customFolders])];
+      const manifest = {
+        docs: mergedDocs.map(({ buffer, ...doc }) => doc),
+        folders: nextFolders,
+        deletedDocs: mergedDeletions
+      };
+      await uploadDriveFile(token, {
+        id: manifestFile?.id,
+        name: googleDriveManifestName,
+        data: JSON.stringify(manifest),
+        type: "application/json"
+      });
+
+      await clearDocs();
+      for (const doc of mergedDocs) await saveDoc(doc);
+      setDocs(mergedDocs.sort((a, b) => b.updatedAt - a.updatedAt));
+      setActiveId((id) => mergedDocs.some((doc) => doc.id === id) ? id : mergedDocs[0]?.id || null);
+      setCustomFolders(nextFolders);
+      setDeletedDocs(mergedDeletions);
+      setMessage("Google Drive sync complete.");
+    } catch (error) {
+      setMessage(error.message || "Google Drive sync failed.");
+    } finally {
+      setIsSyncing(false);
+    }
+  }
+
   async function handleImport(event) {
     const files = [...event.target.files];
     event.target.value = "";
@@ -528,6 +628,7 @@ function App() {
   async function deleteActiveDoc() {
     if (!activeDoc) return;
     await removeDoc(activeDoc.id);
+    setDeletedDocs((items) => ({ ...items, [activeDoc.id]: Date.now() }));
     const remaining = docs.filter((doc) => doc.id !== activeDoc.id);
     setDocs(remaining);
     setActiveId(remaining[0]?.id || null);
@@ -538,6 +639,7 @@ function App() {
     const confirmed = window.confirm("Delete every document in your library? This cannot be undone.");
     if (!confirmed) return;
     await clearDocs();
+    setDeletedDocs((items) => ({ ...items, ...Object.fromEntries(docs.map((doc) => [doc.id, Date.now()])) }));
     setDocs([]);
     setActiveId(null);
     setMessage("Library deleted.");
@@ -603,6 +705,10 @@ function App() {
           <input accept=".pdf,.txt,.doc,.docx,.epub,application/pdf,application/epub+zip,text/plain" multiple onChange={handleImport} type="file" />
           Import
         </label>
+
+        <button className="sync-button" onClick={syncWithGoogle} disabled={isSyncing}>
+          {isSyncing ? "Syncing..." : "Sync Drive"}
+        </button>
 
         <button className="delete-library-button" onClick={deleteLibrary} disabled={!docs.length}>
           Delete library

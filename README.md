@@ -11,6 +11,17 @@ A quiet local-first reader for web and macOS.
 - Jump to a page from the floating bottom page control
 - Zoom in, zoom out, and fit-to-screen PDF rendering
 - No login or server account required
+- Optional Google Drive sync, using the signed-in user's private App Data folder
+
+## Enable Google Drive Sync
+
+1. In Google Cloud Console, create a **Web application** OAuth client and add your Vercel URL to its authorized JavaScript origins.
+2. Enable the Google Drive API for that project.
+3. Add the client ID as `VITE_GOOGLE_CLIENT_ID` in Vercel's environment variables, then redeploy. Use [.env.example](.env.example) for local development.
+
+Users choose their Google account only when they press **Sync Drive**. Documents are stored in that account's private Google Drive App Data folder, not in Vercel. Sync is manual and merges each document by its most recent update.
+
+Google Drive sync currently runs in the web deployment. The packaged macOS app needs a separate desktop OAuth callback before it can use the same account.
 
 ## Run The Website Locally
 
