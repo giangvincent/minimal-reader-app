@@ -822,7 +822,7 @@ function App() {
         </div>
 
         <div
-          className="stage"
+          className={zoomMode === FIT ? "stage" : "stage manual-zoom"}
           ref={stageRef}
           style={{ "--page-rail-height": `${pageRailHeight}px` }}
           onTouchStart={handleSwipeStart}

@@ -1148,6 +1148,12 @@ select:focus-visible {
     height: auto;
   }
 
+  .manual-zoom .pdf-page,
+  .manual-zoom .pdf-page canvas {
+    width: auto;
+    max-width: none;
+  }
+
   .doc-nav {
     display: none;
   }
