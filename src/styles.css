@@ -485,7 +485,7 @@ select:focus-visible {
   position: relative;
   grid-template-rows: auto minmax(0, 1fr);
   min-width: 0;
-  height: 100vh;
+  height: 100dvh;
   overflow: hidden;
 }
 
@@ -1129,6 +1129,10 @@ select:focus-visible {
     min-height: 360px;
   }
 
+  .epub-location {
+    white-space: normal;
+  }
+
   .text-page pre {
     font-size: 16px;
     line-height: 1.55;
@@ -1154,8 +1158,28 @@ select:focus-visible {
     max-width: none;
   }
 
-  .doc-nav {
-    display: none;
+  .side-page-button {
+    top: 50%;
+    width: 44px;
+    height: 56px;
+    transform: translateY(-50%);
+  }
+
+  .side-page-button-left {
+    left: 0;
+  }
+
+  .side-page-button-right {
+    right: 0;
+  }
+
+  .side-page-button:hover:not(:disabled),
+  .side-page-button:focus-visible {
+    transform: translateY(-50%);
+    box-shadow: none;
+    outline: none;
+    background: transparent;
+    color: var(--side-button-text);
   }
 
   .page-float {

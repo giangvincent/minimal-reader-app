@@ -4,20 +4,14 @@ import * as pdfjsLib from "pdfjs-dist";
 import pdfWorker from "pdfjs-dist/build/pdf.worker.mjs?url";
 import mammoth from "mammoth/mammoth.browser";
 import ePub from "epubjs";
-import DefaultViewManager from "epubjs/src/managers/default";
 import { downloadDriveFile, googleDriveManifestName, listDriveFiles, loadGoogleIdentity, requestDriveToken, uploadDriveFile } from "./google-drive.js";
+
+import ReaderViewManager from "./managers/ReaderViewManager.jsx";
 import "./styles.css";
 import * as svgIcons from "./svg-icons.jsx";
+import { DB_NAME, STORE_NAME, PAGE_CHARS, FIT, manualZooms, GOOGLE_CLIENT_ID, DELETED_DOCS_KEY } from "./constants/appConstants.jsx";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
-
-const DB_NAME = "minimal-reader-db";
-const STORE_NAME = "documents";
-const PAGE_CHARS = 2600;
-const FIT = "fit";
-const manualZooms = [0.7, 0.85, 1, 1.15, 1.35, 1.6, 1.9, 2.25];
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-const DELETED_DOCS_KEY = "minimal-reader-deleted-docs";
 
 function storedDeletions() {
   try {
@@ -29,14 +23,6 @@ function storedDeletions() {
 
 function mimeType(kind) {
   return { pdf: "application/pdf", txt: "text/plain", docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", epub: "application/epub+zip" }[kind] || "application/octet-stream";
-}
-
-class ReaderViewManager extends DefaultViewManager {
-  addEventListeners() {
-    const scroller = this.settings.fullsize ? window : this.container;
-    this._onScroll = this.onScroll.bind(this);
-    scroller.addEventListener("scroll", this._onScroll);
-  }
 }
 
 function applyEpubTheme(rendition, theme) {
@@ -753,7 +739,7 @@ function App() {
 
         <div className="document-list">
           {visibleDocs.map((doc) => (
-            <button className={doc.id === activeDoc?.id ? "doc active" : "doc"} key={doc.id} onClick={() => setActiveId(doc.id)}>
+            <button className={doc.id === activeDoc?.id ? "doc active" : "doc"} key={doc.id} onClick={() => {setActiveId(doc.id); setIsSidebarCollapsed(true);}}>
               <strong>{doc.name}</strong>
               <span>{doc.kind.toUpperCase()} · p. {doc.page || 1} · {formatDate(doc.updatedAt)}</span>
             </button>
