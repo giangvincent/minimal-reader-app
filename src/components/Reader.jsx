@@ -2,9 +2,9 @@ import * as svgIcons from "../svg-icons.jsx";
 import { FIT } from "../constants/appConstants.jsx";
 
 export default function Reader({ state, derived, setters, handlers, refs, onClearMessage }) {
-  const { docs, isSidebarCollapsed, isReaderChromeHidden, isExtractingPage, theme, message, pageInput, zoomMode, pageRailHeight, pdfState, epubState } = state;
+  const { docs, isSidebarCollapsed, isReaderChromeHidden, isReadingFocused, isExtractingPage, theme, message, pageInput, zoomMode, pageRailHeight, pdfState, epubState } = state;
   const { activeDoc, textPages, totalPages, currentPage, zoom, folders } = derived;
-  const { setIsSidebarCollapsed, setTheme, setZoomMode, setPageInput } = setters;
+  const { setIsSidebarCollapsed, setIsReadingFocused, setTheme, setZoomMode, setPageInput } = setters;
   const { goToPage, extractCurrentPageText, changeZoom, deleteActiveDoc, moveActiveDoc, handleSwipeStart, handleSwipeEnd } = handlers;
   const { canvasRef, epubRef, stageRef, textPageRef } = refs;
 
@@ -13,10 +13,10 @@ export default function Reader({ state, derived, setters, handlers, refs, onClea
       <header className={isReaderChromeHidden ? "toolbar reader-chrome-hidden" : "toolbar"}>
         <div className="title-block">
           <button className="icon-button toolbar-sidebar-toggle" onClick={() => setIsSidebarCollapsed((v) => !v)} title={isSidebarCollapsed ? "Show sidebar" : "Hide sidebar"}><svgIcons.ChevronLeftIcon /></button>
-          <span>{activeDoc?.folder || "Library"}</span>
+          <button className="icon-button reading-focus-toggle" onClick={() => setIsReadingFocused((v) => !v)} title={isReadingFocused ? "Show controls" : "Focus reading"}>UI</button>
           <h2>{activeDoc?.name || "No document selected"}</h2>
         </div>
-        <div className="toolbar-actions">
+        <div className={isReadingFocused ? "toolbar-actions reading-focused" : "toolbar-actions"}>
           {activeDoc && (
             <select value={activeDoc.folder || "Library"} onChange={(e) => moveActiveDoc(e.target.value)} title="Move to folder">
               {folders.map((item) => <option key={item}>{item}</option>)}
@@ -44,7 +44,7 @@ export default function Reader({ state, derived, setters, handlers, refs, onClea
       </div>
 
       {activeDoc && (
-        <footer className={isReaderChromeHidden ? "page-float reader-chrome-hidden" : "page-float"}>
+        <footer className={(isReaderChromeHidden || isReadingFocused) ? "page-float reader-chrome-hidden" : "page-float"}>
           <button onClick={() => goToPage(currentPage - 1)} disabled={activeDoc.kind !== "epub" && currentPage <= 1}>Prev</button>
           <button onClick={extractCurrentPageText} disabled={isExtractingPage}>{isExtractingPage ? "Extracting..." : "Extract text"}</button>
           {activeDoc.kind === "epub"

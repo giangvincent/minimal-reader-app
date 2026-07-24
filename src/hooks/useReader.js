@@ -15,6 +15,7 @@ export default function useReader() {
   const [customFolders, setCustomFolders] = useState(() => JSON.parse(localStorage.getItem("minimal-reader-folders") || "[]"));
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => localStorage.getItem("minimal-reader-sidebar") === "collapsed");
   const [isReaderChromeHidden, setIsReaderChromeHidden] = useState(false);
+  const [isReadingFocused, setIsReadingFocused] = useState(false);
   const [activeId, setActiveId] = useState(null);
   const [folder, setFolder] = useState("Library");
   const [pageInput, setPageInput] = useState("1");
@@ -327,14 +328,14 @@ export default function useReader() {
 
   return {
     state: {
-      docs, theme, customFolders, isSidebarCollapsed, isReaderChromeHidden, activeId, folder,
+      docs, theme, customFolders, isSidebarCollapsed, isReaderChromeHidden, isReadingFocused, activeId, folder,
       pageInput, zoomMode, manualZoom, fitZoom, pageRailHeight, pdfState, epubState, message,
       isFolderDialogOpen, folderName, extractedPage, isExtractingPage, deletedDocs, isSyncing
     },
     derived: { folders, visibleDocs, activeDoc, textPages, totalPages, currentPage, zoom },
     refs: { canvasRef, epubRef, stageRef, textPageRef },
     setters: {
-      setTheme, setIsSidebarCollapsed, setIsReaderChromeHidden, setActiveId, setFolder,
+      setTheme, setIsSidebarCollapsed, setIsReaderChromeHidden, setIsReadingFocused, setActiveId, setFolder,
       setPageInput, setZoomMode, setManualZoom, setFolderName, setIsFolderDialogOpen, setExtractedPage
     },
     handlers: {

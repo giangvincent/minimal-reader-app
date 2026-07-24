@@ -372,6 +372,23 @@ select:focus-visible {
   display: none !important;
 }
 
+.reading-focused {
+  display: none !important;
+}
+
+.reading-focus-toggle {
+  display: none;
+}
+
+.sidebar-collapsed .reading-focus-toggle {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  width: 42px;
+  height: 42px;
+  font-size: 11px;
+}
+
 .sidebar-collapsed .sidebar::after {
   display: grid;
   place-items: center;
@@ -1076,7 +1093,7 @@ select:focus-visible {
     align-items: stretch;
     gap: 8px;
     padding: 10px 14px 12px;
-    min-height: 96px;
+    min-height: auto;
   }
 
   .title-block h2 {
@@ -1086,7 +1103,7 @@ select:focus-visible {
   .title-block {
     display: grid;
     grid-template-rows: auto auto;
-    grid-template-columns: 40px minmax(0, 1fr);
+    grid-template-columns: 40px 40px minmax(0, 1fr);
     column-gap: 8px;
     align-items: center;
   }
@@ -1160,9 +1177,9 @@ select:focus-visible {
 
   .side-page-button {
     top: 50%;
+    transform: translateY(-50%);
     width: 44px;
     height: 56px;
-    transform: translateY(-50%);
   }
 
   .side-page-button-left {
@@ -1176,8 +1193,8 @@ select:focus-visible {
   .side-page-button:hover:not(:disabled),
   .side-page-button:focus-visible {
     transform: translateY(-50%);
-    box-shadow: none;
     outline: none;
+    box-shadow: none;
     background: transparent;
     color: var(--side-button-text);
   }
